@@ -9,86 +9,115 @@
 </head>
 <body>
   <div id="wrapper">
-    <div id="canvas-container">
-      <canvas id="mainCanvas"></canvas>
+    <div id="canvas-area">
+      <div class="preview-card">
+        <div class="preview-head">
+          <div class="preview-kicker">Preview</div>
+          <h1>Zvuk Wave Generator</h1>
+        </div>
+
+        <div id="canvas-container">
+          <canvas id="mainCanvas"></canvas>
+        </div>
+      </div>
     </div>
 
     <div class="control-panel">
-      <h2>Zvuk Wave Generator</h2>
+      <div class="panel-inner">
 
-      <!-- PRIMARY ACTIONS -->
-      <div class="primary-actions">
-        <button id="randomBtn" class="btn btn-primary btn-primary--hero">✨Generate✨</button>
-        <button id="resetBtn" class="btn btn-secondary btn-secondary--under-hero">Reset</button>
-
-        <label class="checkbox-row">
-          <input id="exportLogoToggle" type="checkbox">
-          <span>Logo</span>
-        </label>
-
-        <label class="checkbox-row">
-          <input id="exportPlaqueToggle" type="checkbox">
-          <span>Plaque</span>
-        </label>
-      </div>
-      <!-- SAVE -->
-      <div class="group-divider"></div>
-      <div class="group-title">Save PNG</div>
-      <div class="save-row save-row--primary">
-        <button id="save1000Btn" class="btn btn-save">1000×1000</button>
-        <button id="save534Btn" class="btn btn-save">534×530</button>
-        <button id="save640Btn" class="btn btn-save">640×320</button>
-      </div>
-
-      <div class="group-title" style="margin-top:12px;">Save SVG</div>
-      <div class="save-row save-row--primary">
-        <button id="save1000SvgBtn" class="btn btn-save">1000×1000</button>
-        <button id="save534SvgBtn" class="btn btn-save">534×530</button>
-        <button id="save640SvgBtn" class="btn btn-save">640×320</button>
-      </div>
-      <!-- WAVE SETTINGS -->
-      <label>Peaks</label>
-      <input id="peaks" type="range" min="1" max="10" step="1" value="8">
-
-      <label>Amplitude</label>
-      <input id="amplitude" type="range" min="100" max="250" step="1" value="150">
-
-      <label>Thickness</label>
-      <input id="thickness" type="range" min="400" max="1000" step="1" value="550">
-
-      <label>Peak skew</label>
-      <input id="peakSkew" type="range" min="-1.5" max="1.5" step="0.01" value="0">
-
-      <label>Rotation</label>
-      <input id="rotation" type="range" min="0" max="360" step="1" value="0">
-
-      <label>Scale</label>
-      <input id="posZ" type="range" min="0" max="500" step="1" value="0">
-
-      <label>Organic</label>
-      <input id="organic" type="range" min="0" max="500" step="1" value="0">
-
-
-
-      <!-- COLORS -->
-      <div class="group-divider"></div>
-      <div class="group-title">Colors</div>
-      <div class="palette-row-compact">
-        <div class="palette-block">
-          <div class="palette-title-compact">Background</div>
-          <div id="bgPalette" class="palette-compact"></div>
+        <div class="panel-title-wrap">
+          <div class="panel-kicker">Generator</div>
+          <h2>Wave Controls</h2>
         </div>
-        <div class="palette-block">
-          <div class="palette-title-compact">Wave</div>
-          <div id="wavePalette" class="palette-compact"></div>
-        </div>
-      </div>
-      <div class="palette-actions-compact">
-        <button id="randomColorBothBtn">Random</button>
-        <button id="randomBgBtn">Bg</button>
-        <button id="randomWaveBtn">Wave</button>
-      </div>
 
+        <!-- PRIMARY ACTIONS -->
+        <div class="panel-card primary-actions">
+          <button id="randomBtn" class="btn btn-primary btn-primary--hero">Generate </button>
+          <button id="resetBtn" class="btn btn-secondary btn-secondary--under-hero">Reset</button>
+
+          <div class="toggle-grid">
+            <label class="checkbox-row">
+              <input id="exportLogoToggle" type="checkbox">
+              <span>Logo</span>
+            </label>
+
+            <label class="checkbox-row">
+              <input id="exportPlaqueToggle" type="checkbox">
+              <span>Plaque</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="panel-card">
+          <div class="group-title">Wave Settings</div>
+
+          <label>Peaks</label>
+          <input id="peaks" type="range" min="1" max="10" step="1" value="8">
+
+          <label>Amplitude</label>
+          <input id="amplitude" type="range" min="100" max="250" step="1" value="150">
+
+          <label>Thickness</label>
+          <input id="thickness" type="range" min="400" max="1000" step="1" value="550">
+
+          <label>Peak skew</label>
+          <input id="peakSkew" type="range" min="-1.5" max="1.5" step="0.01" value="0">
+
+          <label>Rotation</label>
+          <input id="rotation" type="range" min="0" max="360" step="1" value="0">
+
+          <label>Scale</label>
+          <input id="posZ" type="range" min="0" max="500" step="1" value="0">
+
+          <label>Organic</label>
+          <input id="organic" type="range" min="0" max="500" step="1" value="0">
+        </div>
+
+        <!-- SAVE PNG -->
+        <div class="panel-card">
+          <div class="group-title">Save PNG</div>
+          <div class="save-row save-row--primary">
+            <button id="save1000Btn" class="btn btn-save">1000×1000</button>
+            <button id="save534Btn" class="btn btn-save">534×530</button>
+            <button id="save640Btn" class="btn btn-save">640×320</button>
+          </div>
+        </div>
+
+        <!-- SAVE SVG -->
+        <div class="panel-card">
+          <div class="group-title">Save SVG</div>
+          <div class="save-row save-row--primary">
+            <button id="save1000SvgBtn" class="btn btn-save">1000×1000</button>
+            <button id="save534SvgBtn" class="btn btn-save">534×530</button>
+            <button id="save640SvgBtn" class="btn btn-save">640×320</button>
+          </div>
+        </div>
+
+        <!-- COLORS -->
+        <div class="panel-card">
+          <div class="group-title">Colors</div>
+
+          <div class="palette-row-compact">
+            <div class="palette-block">
+              <div class="palette-title-compact">Background</div>
+              <div id="bgPalette" class="palette-compact"></div>
+            </div>
+
+            <div class="palette-block">
+              <div class="palette-title-compact">Wave</div>
+              <div id="wavePalette" class="palette-compact"></div>
+            </div>
+          </div>
+
+          <div class="palette-actions-compact">
+            <button id="randomColorBothBtn" class="btn btn-mini">Random</button>
+            <button id="randomBgBtn" class="btn btn-mini">Bg</button>
+            <button id="randomWaveBtn" class="btn btn-mini">Wave</button>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 </body>
