@@ -69,10 +69,12 @@ const PLAQUE_PATH = "M50.074 0C35.3605 0 27.9095 1.97779 21.9934 4.42919C14.0381
 // ========================
 // QUALITY
 // ========================
-const PREVIEW_STEPS = 600;
-const SVG_SOURCE_STEPS = 180;
+const PREVIEW_STEPS = 900;
+const SVG_SOURCE_STEPS = 260;
 const SVG_EDIT_POINTS_TARGET = 16;
-const GLOBAL_SKEW_FACTOR = 0.6;
+
+// насколько продолжаем волну вправо
+const EXTRA_RIGHT_LENGTH = 800;
 
 // ========================
 // STATE
@@ -86,7 +88,6 @@ let params = {
   peaks: 8,
   amplitude: 150,
   thickness: 550,
-  peakSkew: 0,
   rotation: 0,
   posZ: 0,
   organic: 0,
@@ -107,41 +108,32 @@ function organicField(a0, t, scl) {
 }
 
 // ========================
-// GLOBAL SKEW
-// ========================
-
-function applyAffineSkewX(points, centerX, centerY, skewStrength, shearFactor = GLOBAL_SKEW_FACTOR) {
-  if (!skewStrength || !points?.length) return points;
-
-  const k = skewStrength * shearFactor;
-
-  return points.map(pt => {
-    const dx = pt.x - centerX;
-    const dy = pt.y - centerY;
-
-    return {
-      x: centerX + dx + dy * k,
-      y: centerY + dy
-    };
-  });
-}
-
-// ========================
 // WAVE GENERATION
 // ========================
 function generateWave(p, size, steps = PREVIEW_STEPS) {
   const top = [];
   const bot = [];
-  const len = size * 1.4;
-  const x0 = -len * 0.05;
+
+  const baseLen = size * 1.4;
+  const extraLen = EXTRA_RIGHT_LENGTH;
+  const len = baseLen + extraLen;
+
+  const x0 = -baseLen * 0.05;
   const cy = size * 0.5;
+
   const phaseTop = -1.5;
   const phaseBottom = 1.5;
   const orgScl = 3.0;
 
   for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const env = t;
+    const tFull = i / steps;
+    const xNorm = tFull * len;
+
+    // t идет дальше 1, поэтому справа волна продолжается,
+    // но основная часть не растягивается
+    const t = xNorm / baseLen;
+    const env = Math.min(t, 1);
+
     const thick = p.thickness * env;
     const freq = p.peaks * Math.PI * 2;
 
@@ -153,7 +145,8 @@ function generateWave(p, size, steps = PREVIEW_STEPS) {
 
     const wob = organicField(t, orgSeed, orgScl) * p.organic * env;
 
-    const rx = x0 + t * len;
+    const rx = x0 + xNorm;
+
     const topOff = Math.max(0, thick * 0.5 + tW);
     const botOff = Math.max(0, thick * 0.5 + bW);
 
@@ -170,27 +163,7 @@ function generateWave(p, size, steps = PREVIEW_STEPS) {
     bot.push({ x: rx, y: botY });
   }
 
-  const allPoints = [...top, ...bot];
-
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-
-  for (const pt of allPoints) {
-    if (pt.x < minX) minX = pt.x;
-    if (pt.x > maxX) maxX = pt.x;
-    if (pt.y < minY) minY = pt.y;
-    if (pt.y > maxY) maxY = pt.y;
-  }
-
-  const centerX = (minX + maxX) * 0.5;
-  const centerY = (minY + maxY) * 0.5;
-
-  const skewedTop = applyAffineSkewX(top, centerX, centerY, p.peakSkew);
-  const skewedBot = applyAffineSkewX(bot, centerX, centerY, p.peakSkew);
-
-  return { top: skewedTop, bot: skewedBot };
+  return { top, bot };
 }
 
 // ========================
@@ -204,6 +177,7 @@ function drawBadge(ctx, w, h) {
   const badgeH = w * 0.12;
 
   let pS = 0, pW = 0, pH = 0;
+
   if (showPlaque) {
     pS = badgeH / 101;
     pW = 101 * pS;
@@ -221,6 +195,7 @@ function drawBadge(ctx, w, h) {
 
   const x = w - margin - pW;
   const y = margin;
+
   const lX = x + (pW - lW) * 0.5;
   const lY = y + (pH - lH) * 0.5;
 
@@ -253,6 +228,7 @@ function buildBadgeSVG(w, h) {
   const badgeH = w * 0.12;
 
   let pS = 0, pW = 0, pH = 0;
+
   if (showPlaque) {
     pS = badgeH / 101;
     pW = 101 * pS;
@@ -270,6 +246,7 @@ function buildBadgeSVG(w, h) {
 
   const x = w - margin - pW;
   const y = margin;
+
   const lX = x + (pW - lW) * 0.5;
   const lY = y + (pH - lH) * 0.5;
 
@@ -293,18 +270,16 @@ function buildBadgeSVG(w, h) {
 
   return out;
 }
+
 // ========================
 // VIEW TRANSFORM
 // ========================
 function getWaveTransform(w, h) {
   const baseSize = 1000;
-
   let scale;
 
-  // Для 640x320 сохраняем тот же центр и тот же "зум",
-  // что у квадратной композиции: квадрат вписывается по высоте.
   if (w === 640 && h === 320) {
-    scale = h / baseSize; // 0.32
+    scale = h / baseSize;
   } else {
     scale = w / baseSize;
   }
@@ -317,11 +292,23 @@ function getWaveTransform(w, h) {
 
   return { scale, offsetX, offsetY };
 }
+
+function getAutoTailShift(rotationDeg) {
+  const a = ((rotationDeg % 360) + 360) % 360;
+  const rad = a * Math.PI / 180;
+
+  const sideShift = Math.abs(Math.sin(rad)) * 250;
+  const flipShift = Math.max(0, -Math.cos(rad)) * 300;
+
+  return sideShift + flipShift;
+}
+
 // ========================
 // RENDER PREVIEW
 // ========================
 function render(canvas, w, h) {
   const ctx = canvas.getContext("2d");
+
   canvas.width = w;
   canvas.height = h;
 
@@ -336,14 +323,16 @@ function render(canvas, w, h) {
   ctx.scale(scale, scale);
 
   const zScale = 1 + params.posZ / 500;
+  const tailShift = getAutoTailShift(params.rotation);
 
   ctx.translate(500, 500);
   ctx.scale(zScale, zScale);
   ctx.rotate(params.rotation * Math.PI / 180);
-  ctx.translate(-500, -500);
+  ctx.translate(-500 - tailShift, -500);
 
   ctx.fillStyle = "#" + fgColor;
   ctx.beginPath();
+
   ctx.moveTo(wave.top[0].x, wave.top[0].y);
 
   for (let i = 1; i < wave.top.length; i++) {
@@ -360,6 +349,7 @@ function render(canvas, w, h) {
 
   if (showLogo) drawBadge(ctx, w, h);
 }
+
 // ========================
 // CANVAS SIZING
 // ========================
@@ -372,8 +362,10 @@ function getCanvasSize() {
 function redraw() {
   const canvas = document.getElementById("mainCanvas");
   const size = getCanvasSize();
+
   canvas.style.width = size + "px";
   canvas.style.height = size + "px";
+
   render(canvas, size, size);
 }
 
@@ -397,18 +389,6 @@ function enforceConstraints() {
   const ampSlider = document.getElementById("amplitude");
   if (ampSlider) ampSlider.max = params.thickness < 450 ? 200 : 250;
 
-  if (params.organic > 200) {
-    params.peakSkew = Math.max(-0.25, Math.min(0.25, params.peakSkew));
-    const el = document.getElementById("peakSkew");
-    if (el) el.value = params.peakSkew;
-  }
-
-  const skewSlider = document.getElementById("peakSkew");
-  if (skewSlider) {
-    skewSlider.min = params.organic > 200 ? -0.25 : -1.5;
-    skewSlider.max = params.organic > 200 ? 0.25 : 1.5;
-  }
-
   const organicNorm = params.organic / 500;
   const minAmpFromOrganic = 100 + organicNorm * 120;
 
@@ -419,6 +399,7 @@ function enforceConstraints() {
   }
 
   const ampMax = params.thickness < 450 ? 200 : 250;
+
   if (params.amplitude > ampMax) {
     params.amplitude = ampMax;
     const el = document.getElementById("amplitude");
@@ -432,6 +413,7 @@ function enforceConstraints() {
 function createSwatches() {
   const bgDiv = document.getElementById("bgPalette");
   const wvDiv = document.getElementById("wavePalette");
+
   if (!bgDiv || !wvDiv) return;
 
   bgDiv.innerHTML = "";
@@ -441,23 +423,33 @@ function createSwatches() {
     const bgS = document.createElement("div");
     bgS.className = "swatch";
     bgS.style.backgroundColor = "#" + hex;
+
     bgS.addEventListener("click", () => {
-      if (hex === fgColor || isForbidden(hex, fgColor)) fgColor = pickFor(hex);
+      if (hex === fgColor || isForbidden(hex, fgColor)) {
+        fgColor = pickFor(hex);
+      }
+
       bgColor = hex;
       updateSwatchActive();
       redraw();
     });
+
     bgDiv.appendChild(bgS);
 
     const wvS = document.createElement("div");
     wvS.className = "swatch";
     wvS.style.backgroundColor = "#" + hex;
+
     wvS.addEventListener("click", () => {
-      if (hex === bgColor || isForbidden(bgColor, hex)) bgColor = pickFor(hex);
+      if (hex === bgColor || isForbidden(bgColor, hex)) {
+        bgColor = pickFor(hex);
+      }
+
       fgColor = hex;
       updateSwatchActive();
       redraw();
     });
+
     wvDiv.appendChild(wvS);
   });
 
@@ -479,24 +471,25 @@ function updateSwatchActive() {
 // ========================
 function generateRandom() {
   const [bg, fg] = pickAllowed();
+
   bgColor = bg;
   fgColor = fg;
 
   const r = Math.random;
+
   const thickness = 400 + Math.floor(r() * 600);
   const ampMax = thickness < 450 ? 200 : 250;
+
   orgSeed = r() * 100;
 
   const organic = Math.floor(r() * 500);
   const organicNorm = organic / 500;
   const minAmp = 100 + organicNorm * 120;
-  const skewMax = organic > 200 ? 0.25 : 1.0;
 
   params = {
     peaks: 3 + Math.floor(r() * 8),
-    amplitude: minAmp + Math.floor(r() * Math.max(1, (ampMax - minAmp))),
+    amplitude: minAmp + Math.floor(r() * Math.max(1, ampMax - minAmp)),
     thickness,
-    peakSkew: (r() - 0.5) * 2 * skewMax,
     rotation: Math.floor(r() * 360),
     posZ: Math.floor(r() * 500),
     organic,
@@ -510,7 +503,9 @@ function generateRandom() {
 
 function resetParams() {
   params = { ...DEFAULTS };
+
   const [bg, fg] = pickAllowed();
+
   bgColor = bg;
   fgColor = fg;
 
@@ -525,8 +520,8 @@ function resetParams() {
 // ========================
 function saveHighRes(w, h) {
   const c = document.createElement("canvas");
-  const mode = (w === 640 && h === 320) ? "cover" : "contain";
-  render(c, w, h, mode);
+
+  render(c, w, h);
 
   const a = document.createElement("a");
   a.download = `wave_${w}x${h}.png`;
@@ -549,10 +544,12 @@ function pointAngle(a, b, c) {
 
   const abLen = Math.hypot(abx, aby);
   const bcLen = Math.hypot(bcx, bcy);
+
   if (abLen === 0 || bcLen === 0) return Math.PI;
 
   let dot = (abx * bcx + aby * bcy) / (abLen * bcLen);
   dot = Math.max(-1, Math.min(1, dot));
+
   return Math.acos(dot);
 }
 
@@ -577,6 +574,7 @@ function findKeyPointIndices(points) {
     const dy2 = next.y - curr.y;
 
     const isExtremum = (dy1 >= 0 && dy2 < 0) || (dy1 <= 0 && dy2 > 0);
+
     if (isExtremum) {
       keep.add(i);
       continue;
@@ -611,8 +609,10 @@ function reducePointsEditorFriendly(points, targetCount = SVG_EDIT_POINTS_TARGET
       const prev = points[i - 1];
       const curr = points[i];
       const next = points[i + 1];
+
       const dy1 = curr.y - prev.y;
       const dy2 = next.y - curr.y;
+
       const extremumBoost = ((dy1 >= 0 && dy2 < 0) || (dy1 <= 0 && dy2 > 0)) ? 10 : 0;
 
       candidates.push({
@@ -633,6 +633,7 @@ function reducePointsEditorFriendly(points, targetCount = SVG_EDIT_POINTS_TARGET
 
   if (sorted.length > targetCount) {
     const mustKeep = new Set(findKeyPointIndices(points));
+
     const removable = sorted
       .filter(i => !mustKeep.has(i))
       .map(i => {
@@ -640,11 +641,13 @@ function reducePointsEditorFriendly(points, targetCount = SVG_EDIT_POINTS_TARGET
         const prevIdx = sorted[idx - 1];
         const nextIdx = sorted[idx + 1];
         const score = (nextIdx ?? i) - (prevIdx ?? i);
+
         return { i, score };
       })
       .sort((a, b) => a.score - b.score);
 
-    let result = new Set(sorted);
+    const result = new Set(sorted);
+
     for (const item of removable) {
       if (result.size <= targetCount) break;
       result.delete(item.i);
@@ -692,6 +695,7 @@ function buildWavePathData(wave) {
   const topPath = buildSmoothPath(wave.top, true);
   const reversedBot = [...wave.bot].reverse();
   const startBot = reversedBot[0];
+
   const joinLine = ` L ${svgNum(startBot.x)} ${svgNum(startBot.y)}`;
   const botPath = buildSmoothPath(reversedBot, false);
 
@@ -704,8 +708,10 @@ function buildSVG(w, h) {
   const wavePath = buildWavePathData(wave);
 
   const { scale, offsetX, offsetY } = getWaveTransform(w, h);
+
   const zScale = 1 + params.posZ / 500;
   const angle = params.rotation;
+  const tailShift = getAutoTailShift(params.rotation);
 
   const transform = [
     `translate(${svgNum(offsetX)} ${svgNum(offsetY)})`,
@@ -713,7 +719,7 @@ function buildSVG(w, h) {
     `translate(500 500)`,
     `scale(${zScale})`,
     `rotate(${angle})`,
-    `translate(-500 -500)`
+    `translate(${svgNum(-500 - tailShift)} -500)`
   ].join(" ");
 
   const badgeSVG = buildBadgeSVG(w, h);
@@ -731,8 +737,7 @@ function buildSVG(w, h) {
 }
 
 function saveSVG(w, h) {
-  const mode = (w === 640 && h === 320) ? "cover" : "contain";
-  const svg = buildSVG(w, h, mode);
+  const svg = buildSVG(w, h);
 
   const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -750,6 +755,7 @@ function saveSVG(w, h) {
 // ========================
 window.addEventListener("DOMContentLoaded", () => {
   const [bg, fg] = pickAllowed();
+
   bgColor = bg;
   fgColor = fg;
 
@@ -777,20 +783,24 @@ window.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("randomColorBothBtn")?.addEventListener("click", () => {
     const [b, f] = pickAllowed();
+
     bgColor = b;
     fgColor = f;
+
     updateSwatchActive();
     redraw();
   });
 
   document.getElementById("randomBgBtn")?.addEventListener("click", () => {
     bgColor = pickFor(fgColor);
+
     updateSwatchActive();
     redraw();
   });
 
   document.getElementById("randomWaveBtn")?.addEventListener("click", () => {
     fgColor = pickFor(bgColor);
+
     updateSwatchActive();
     redraw();
   });
