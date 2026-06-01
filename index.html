@@ -47,7 +47,33 @@
             </label>
           </div>
         </div>
- <!-- SAVE PNG -->
+
+        <!-- SETTINGS -->
+        <div class="panel-card">
+          <div class="group-title">Wave Settings</div>
+
+          <label>Peaks</label>
+          <input id="peaks" type="range" min="1" max="7" step="1">
+
+          <label>Amplitude</label>
+          <input type="range" id="amplitude" min="100" max="350" value="150">
+
+          <label>Thickness</label>
+          <input id="thickness" type="range" min="400" max="1000" step="1" value="550">
+
+          
+
+          <label>Rotation</label>
+          <input id="rotation" type="range" min="0" max="360" step="1" value="0">
+
+          <label>Scale</label>
+          <input id="posZ" type="range" min="0" max="500" step="1" value="0">
+
+          <label>Organic</label>
+          <input id="organic" type="range" min="0" max="500" step="1" value="0">
+        </div>
+
+        <!-- SAVE PNG -->
         <div class="panel-card">
           <div class="group-title">Save PNG</div>
           <div class="save-row save-row--primary">
@@ -66,32 +92,6 @@
             <button id="save640SvgBtn" class="btn btn-save">640×320</button>
           </div>
         </div>
-        <!-- SETTINGS -->
-        <div class="panel-card">
-          <div class="group-title">Wave Settings</div>
-
-          <label>Peaks</label>
-          <input id="peaks" type="range" min="1" max="10" step="1" value="8">
-
-          <label>Amplitude</label>
-          <input id="amplitude" type="range" min="100" max="250" step="1" value="150">
-
-          <label>Thickness</label>
-          <input id="thickness" type="range" min="400" max="1000" step="1" value="550">
-
-      
-
-          <label>Rotation</label>
-          <input id="rotation" type="range" min="0" max="360" step="1" value="0">
-
-          <label>Scale</label>
-          <input id="posZ" type="range" min="0" max="500" step="1" value="0">
-
-          <label>Organic</label>
-          <input id="organic" type="range" min="0" max="500" step="1" value="0">
-        </div>
-
-       
 
         <!-- COLORS -->
         <div class="panel-card">
