@@ -1,40 +1,13 @@
 // ========================
-// PALETTE & FORBIDDEN PAIRS
+// PALETTE
 // ========================
 const paletteColors = [
-  "06DF65","B9FF8E","209F6D","AEEEFF","F7F0B1","FFD1E5","CBF2EC",
-  "D7D9FF","2CB1FF","FF9535","FF49A0","00DBDB","765BFF"
-];
-
-const forbiddenPairsRaw = [
-  ["AEEEFF","CBF2EC"],["B9FF8E","AEEEFF"],["B9FF8E","CBF2EC"],
-  ["D3C8D0","F7F0B1"],["CBF2EC","AEEEFF"],["D3C8D0","FFD1E5"],
-  ["D7D9FF","FFD1E5"],["209F6D","FF49A0"],["00DBDB","D3C8D0"],
-  ["209F6D","D3C8D0"],["D3C8D0","D7D9FF"],["F7F0B1","B9FF8E"],
-  ["FF9535","D7D9FF"],["D7D9FF","209F6D"],["D7D9FF","06DF65"],
-  ["D7D9FF","CBF2EC"],["FF9535","00DBDB"],["FFD1E5","CBF2EC"],
-  ["B9FF8E","FFD1E5"],["765BFF","209F6D"],["FFD1E5","AEEEFF"],
-  ["00DBDB","06DF65"],["D3C8D0","CBF2EC"],["209F6D","765BFF"],
-  ["B9FF8E","AEEEFF"],["F7F0B1","CBF2EC"],["AEEEFF","D7D9FF"],
-  ["FF9535","D3C8D0"],["AEEEFF","D3C8D0"],["06DF65","FF9535"],
-  ["B9FF8E","D7D9FF"],["06DF65","FF49A0"],["CBF2EC","B9FF8E"],
-  ["FF49A0","06DF65"],
+  "70DC55","98F580","C4FFB5","D6FF89","02A057","FF4E8D","FFD7F4",
+  "7D69FF","3AD48D","FFA7DA","A89BFF","92FFBB","D4CDFF"
 ];
 
 function normHex(h) {
   return String(h).trim().replace(/^#/, "").toUpperCase();
-}
-
-function pairKey(a, b) {
-  const x = normHex(a);
-  const y = normHex(b);
-  return x < y ? `${x}|${y}` : `${y}|${x}`;
-}
-
-const forbiddenSet = new Set(forbiddenPairsRaw.map(([a, b]) => pairKey(a, b)));
-
-function isForbidden(a, b) {
-  return forbiddenSet.has(pairKey(a, b));
 }
 
 function randPalette() {
@@ -42,22 +15,25 @@ function randPalette() {
 }
 
 function pickAllowed() {
-  for (let i = 0; i < 500; i++) {
-    const bg = randPalette();
-    const fg = randPalette();
-    if (bg === fg || isForbidden(bg, fg)) continue;
-    return [bg, fg];
+  let bg = randPalette();
+  let fg = randPalette();
+
+  while (bg === fg) {
+    fg = randPalette();
   }
-  return ["765BFF", "06DF65"];
+
+  return [bg, fg];
 }
 
 function pickFor(fixed) {
-  for (let i = 0; i < 500; i++) {
-    const c = randPalette();
-    if (c === normHex(fixed) || isForbidden(fixed, c)) continue;
-    return c;
+  const fixedNorm = normHex(fixed);
+  let c = randPalette();
+
+  while (c === fixedNorm) {
+    c = randPalette();
   }
-  return "06DF65";
+
+  return c;
 }
 
 // ========================
@@ -72,20 +48,18 @@ const PLAQUE_PATH = "M50.074 0C35.3605 0 27.9095 1.97779 21.9934 4.42919C14.0381
 const PREVIEW_STEPS = 900;
 const SVG_SOURCE_STEPS = 260;
 const SVG_EDIT_POINTS_TARGET = 16;
-
-// насколько продолжаем волну вправо
 const EXTRA_RIGHT_LENGTH = 800;
 
 // ========================
 // STATE
 // ========================
-let bgColor = "765BFF";
-let fgColor = "06DF65";
+let bgColor = "7D69FF";
+let fgColor = "70DC55";
 let showLogo = false;
 let showPlaque = false;
 
 let params = {
-  peaks: 8,
+  peaks: 7,
   amplitude: 150,
   thickness: 550,
   rotation: 0,
@@ -129,8 +103,6 @@ function generateWave(p, size, steps = PREVIEW_STEPS) {
     const tFull = i / steps;
     const xNorm = tFull * len;
 
-    // t идет дальше 1, поэтому справа волна продолжается,
-    // но основная часть не растягивается
     const t = xNorm / baseLen;
     const env = Math.min(t, 1);
 
@@ -143,7 +115,8 @@ function generateWave(p, size, steps = PREVIEW_STEPS) {
     const tW = rawTop * p.amplitude * env;
     const bW = rawBot * p.amplitude * env;
 
-    const wob = organicField(t, orgSeed, orgScl) * p.organic * env;
+    const organicAmount = p.peaks <= 3 ? 0 : p.organic;
+    const wob = organicField(t, orgSeed, orgScl) * organicAmount * env;
 
     const rx = x0 + xNorm;
 
@@ -200,7 +173,6 @@ function drawBadge(ctx, w, h) {
   const lY = y + (pH - lH) * 0.5;
 
   ctx.save();
-  ctx.globalAlpha = 1;
 
   if (showPlaque) {
     ctx.save();
@@ -380,10 +352,38 @@ function syncSliders() {
 }
 
 function enforceConstraints() {
+  params.peaks = Math.min(7, Math.max(1, params.peaks));
+
+  const peaksEl = document.getElementById("peaks");
+  if (peaksEl) {
+    peaksEl.min = 1;
+    peaksEl.max = 7;
+    peaksEl.value = params.peaks;
+  }
+
+  if (params.peaks <= 3) {
+    params.organic = 0;
+
+    const organicEl = document.getElementById("organic");
+    if (organicEl) organicEl.value = 0;
+  }
+
   if (params.thickness < 450 && params.amplitude > 200) {
     params.amplitude = 200;
     const el = document.getElementById("amplitude");
     if (el) el.value = 200;
+  }
+
+  const posZSlider = document.getElementById("posZ");
+  const posZMax = params.thickness > 700 ? 200 : 500;
+
+  if (posZSlider) {
+    posZSlider.max = posZMax;
+  }
+
+  if (params.posZ > posZMax) {
+    params.posZ = posZMax;
+    if (posZSlider) posZSlider.value = posZMax;
   }
 
   const ampSlider = document.getElementById("amplitude");
@@ -425,7 +425,7 @@ function createSwatches() {
     bgS.style.backgroundColor = "#" + hex;
 
     bgS.addEventListener("click", () => {
-      if (hex === fgColor || isForbidden(hex, fgColor)) {
+      if (hex === fgColor) {
         fgColor = pickFor(hex);
       }
 
@@ -441,7 +441,7 @@ function createSwatches() {
     wvS.style.backgroundColor = "#" + hex;
 
     wvS.addEventListener("click", () => {
-      if (hex === bgColor || isForbidden(bgColor, hex)) {
+      if (hex === bgColor) {
         bgColor = pickFor(hex);
       }
 
@@ -482,18 +482,38 @@ function generateRandom() {
 
   orgSeed = r() * 100;
 
-  const organic = Math.floor(r() * 500);
-  const organicNorm = organic / 500;
-  const minAmp = 100 + organicNorm * 120;
+  const peaks = 3 + Math.floor(r() * 5);
+const organic = peaks <= 3 ? 0 : Math.floor(r() * 500);
+
+const organicNorm = organic / 500;
+const minAmp = 100 + organicNorm * 120;
+
+const posZMax = thickness > 700 ? 200 : 500;
+
+params = {
+  peaks,
+  amplitude: minAmp + Math.floor(r() * Math.max(1, ampMax - minAmp)),
+  thickness,
+  rotation: Math.floor(r() * 360),
+  posZ: Math.floor(r() * (posZMax + 1)),
+  organic,
+};
 
   params = {
-    peaks: 3 + Math.floor(r() * 8),
-    amplitude: minAmp + Math.floor(r() * Math.max(1, ampMax - minAmp)),
-    thickness,
-    rotation: Math.floor(r() * 360),
-    posZ: Math.floor(r() * 500),
-    organic,
-  };
+
+  peaks,
+
+  amplitude: minAmp + Math.floor(r() * Math.max(1, ampMax - minAmp)),
+
+  thickness,
+
+  rotation: Math.floor(r() * 360),
+
+  posZ: Math.floor(r() * (posZMax + 1)),
+
+  organic,
+
+};
 
   syncSliders();
   enforceConstraints();
