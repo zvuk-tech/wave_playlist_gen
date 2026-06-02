@@ -1,13 +1,67 @@
 // ========================
-// PALETTE
+// PALETTE & FORBIDDEN PAIRS
 // ========================
 const paletteColors = [
   "70DC55","98F580","C4FFB5","D6FF89","02A057","FF4E8D","FFD7F4",
   "7D69FF","3AD48D","FFA7DA","A89BFF","92FFBB","D4CDFF"
 ];
 
+const forbiddenPairsRaw = [
+  ["70DC55","3AD48D"],
+  ["70DC55","FFA7DA"],
+  ["70DC55","D4CDFF"],
+  ["98F580","D4CDFF"],
+  ["98F580","FFD7F4"],
+  ["98F580","92FFBB"],
+  ["C4FFB5","D6FF89"],
+  ["C4FFB5","FFD7F4"],
+["92FFBB","D4CDFF"],
+  ["C4FFB5","92FFBB"],
+  ["D6FF89","C4FFB5"],
+  ["D6FF89","FFD7F4"],
+  ["02A057","FF4E8D"],
+  ["02A057","7D69FF"],
+  ["FF4E8D","02A057"],
+  ["FF4E8D","A89BFF"],
+  ["FFD7F4","98F580"],
+  ["FFD7F4","C4FFB5"],
+  ["FFD7F4","D6FF89"],
+  ["FFD7F4","92FFBB"],
+  ["7D69FF","02A057"],
+  ["3AD48D","70DC55"],
+  ["3AD48D","FFA7DA"],
+  ["3AD48D","A89BFF"],
+  ["FFA7DA","70DC55"],
+  ["FFA7DA","3AD48D"],
+  ["FFA7DA","D4CDFF"],
+  ["A89BFF","70DC55"],
+  ["A89BFF","FF4E8D"],
+  ["A89BFF","3AD48D"],
+  ["92FFBB","98F580"],
+  ["92FFBB","C4FFB5"],
+  ["92FFBB","FFD7F4"],
+  ["D4CDFF","70DC55"],
+  ["D4CDFF","98F580"],
+  ["D4CDFF","FFA7DA"],
+  ["3AD48D","D4CDFF"],
+];
+
 function normHex(h) {
   return String(h).trim().replace(/^#/, "").toUpperCase();
+}
+
+function pairKey(a, b) {
+  const x = normHex(a);
+  const y = normHex(b);
+  return x < y ? `${x}|${y}` : `${y}|${x}`;
+}
+
+const forbiddenSet = new Set(
+  forbiddenPairsRaw.map(([a, b]) => pairKey(a, b))
+);
+
+function isForbidden(a, b) {
+  return forbiddenSet.has(pairKey(a, b));
 }
 
 function randPalette() {
@@ -15,25 +69,30 @@ function randPalette() {
 }
 
 function pickAllowed() {
-  let bg = randPalette();
-  let fg = randPalette();
+  for (let i = 0; i < 500; i++) {
+    const bg = randPalette();
+    const fg = randPalette();
 
-  while (bg === fg) {
-    fg = randPalette();
+    if (bg === fg || isForbidden(bg, fg)) continue;
+
+    return [bg, fg];
   }
 
-  return [bg, fg];
+  return ["7D69FF", "70DC55"];
 }
 
 function pickFor(fixed) {
   const fixedNorm = normHex(fixed);
-  let c = randPalette();
 
-  while (c === fixedNorm) {
-    c = randPalette();
+  for (let i = 0; i < 500; i++) {
+    const c = randPalette();
+
+    if (c === fixedNorm || isForbidden(fixedNorm, c)) continue;
+
+    return c;
   }
 
-  return c;
+  return "70DC55";
 }
 
 // ========================
@@ -48,7 +107,7 @@ const PLAQUE_PATH = "M50.074 0C35.3605 0 27.9095 1.97779 21.9934 4.42919C14.0381
 const PREVIEW_STEPS = 900;
 const SVG_SOURCE_STEPS = 260;
 const SVG_EDIT_POINTS_TARGET = 16;
-const EXTRA_RIGHT_LENGTH = 800;
+const EXTRA_RIGHT_LENGTH = 300;
 
 // ========================
 // STATE
@@ -425,12 +484,13 @@ function createSwatches() {
     bgS.style.backgroundColor = "#" + hex;
 
     bgS.addEventListener("click", () => {
-      if (hex === fgColor) {
+      if (hex === fgColor || isForbidden(hex, fgColor)) {
         fgColor = pickFor(hex);
       }
 
       bgColor = hex;
       updateSwatchActive();
+      updateColorPairText();
       redraw();
     });
 
@@ -441,12 +501,13 @@ function createSwatches() {
     wvS.style.backgroundColor = "#" + hex;
 
     wvS.addEventListener("click", () => {
-      if (hex === bgColor) {
+      if (hex === bgColor || isForbidden(bgColor, hex)) {
         bgColor = pickFor(hex);
       }
 
       fgColor = hex;
       updateSwatchActive();
+      updateColorPairText();
       redraw();
     });
 
@@ -454,6 +515,7 @@ function createSwatches() {
   });
 
   updateSwatchActive();
+  updateColorPairText();
 }
 
 function updateSwatchActive() {
@@ -464,6 +526,25 @@ function updateSwatchActive() {
   document.querySelectorAll("#wavePalette .swatch").forEach((s, i) => {
     s.classList.toggle("is-active", paletteColors[i] === normHex(fgColor));
   });
+}
+
+function updateColorPairText() {
+  const el = document.getElementById("colorPairText");
+  if (!el) return;
+
+  el.value = `["${normHex(bgColor)}","${normHex(fgColor)}"],`;
+}
+
+function copyColorPair() {
+  const el = document.getElementById("colorPairText");
+  if (!el) return;
+
+  el.select();
+  el.setSelectionRange(0, 99999);
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(el.value);
+  }
 }
 
 // ========================
@@ -483,41 +564,26 @@ function generateRandom() {
   orgSeed = r() * 100;
 
   const peaks = 3 + Math.floor(r() * 5);
-const organic = peaks <= 3 ? 0 : Math.floor(r() * 500);
+  const organic = peaks <= 3 ? 0 : Math.floor(r() * 500);
 
-const organicNorm = organic / 500;
-const minAmp = 100 + organicNorm * 120;
+  const organicNorm = organic / 500;
+  const minAmp = 100 + organicNorm * 120;
 
-const posZMax = thickness > 700 ? 200 : 500;
-
-params = {
-  peaks,
-  amplitude: minAmp + Math.floor(r() * Math.max(1, ampMax - minAmp)),
-  thickness,
-  rotation: Math.floor(r() * 360),
-  posZ: Math.floor(r() * (posZMax + 1)),
-  organic,
-};
+  const posZMax = thickness > 700 ? 200 : 500;
 
   params = {
-
-  peaks,
-
-  amplitude: minAmp + Math.floor(r() * Math.max(1, ampMax - minAmp)),
-
-  thickness,
-
-  rotation: Math.floor(r() * 360),
-
-  posZ: Math.floor(r() * (posZMax + 1)),
-
-  organic,
-
-};
+    peaks,
+    amplitude: minAmp + Math.floor(r() * Math.max(1, ampMax - minAmp)),
+    thickness,
+    rotation: Math.floor(r() * 360),
+    posZ: Math.floor(r() * (posZMax + 1)),
+    organic,
+  };
 
   syncSliders();
   enforceConstraints();
   updateSwatchActive();
+  updateColorPairText();
   redraw();
 }
 
@@ -532,6 +598,7 @@ function resetParams() {
   syncSliders();
   enforceConstraints();
   updateSwatchActive();
+  updateColorPairText();
   redraw();
 }
 
@@ -786,6 +853,7 @@ window.addEventListener("DOMContentLoaded", () => {
     el.addEventListener("input", () => {
       params[key] = parseFloat(el.value);
       enforceConstraints();
+      updateColorPairText();
       redraw();
     });
   }
@@ -808,6 +876,7 @@ window.addEventListener("DOMContentLoaded", () => {
     fgColor = f;
 
     updateSwatchActive();
+    updateColorPairText();
     redraw();
   });
 
@@ -815,6 +884,7 @@ window.addEventListener("DOMContentLoaded", () => {
     bgColor = pickFor(fgColor);
 
     updateSwatchActive();
+    updateColorPairText();
     redraw();
   });
 
@@ -822,8 +892,11 @@ window.addEventListener("DOMContentLoaded", () => {
     fgColor = pickFor(bgColor);
 
     updateSwatchActive();
+    updateColorPairText();
     redraw();
   });
+
+  document.getElementById("copyColorPairBtn")?.addEventListener("click", copyColorPair);
 
   const logoEl = document.getElementById("exportLogoToggle");
   const plaqueEl = document.getElementById("exportPlaqueToggle");
@@ -858,6 +931,8 @@ window.addEventListener("DOMContentLoaded", () => {
   createSwatches();
   syncSliders();
   enforceConstraints();
+  updateSwatchActive();
+  updateColorPairText();
   redraw();
 
   window.addEventListener("resize", redraw);
