@@ -558,7 +558,7 @@ function generateRandom() {
 
   const r = Math.random;
 
-  const thickness = 400 + Math.floor(r() * 600);
+  const thickness = 400 + Math.floor(r() * 401);
   const ampMax = thickness < 450 ? 200 : 250;
 
   orgSeed = r() * 100;
