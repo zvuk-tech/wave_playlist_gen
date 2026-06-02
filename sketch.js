@@ -15,7 +15,7 @@ const forbiddenPairsRaw = [
   ["98F580","92FFBB"],
   ["C4FFB5","D6FF89"],
   ["C4FFB5","FFD7F4"],
-["92FFBB","D4CDFF"],
+["92FFBB","D4CDFF"],["02A057","FFD7F4"],["FFA7DA","92FFBB"],["FFD7F4","02A057"],["02A057","D4CDFF"],
   ["C4FFB5","92FFBB"],
   ["D6FF89","C4FFB5"],
   ["D6FF89","FFD7F4"],
