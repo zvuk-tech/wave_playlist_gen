@@ -1,99 +1,167 @@
 // ========================
-// PALETTE & FORBIDDEN PAIRS
+// ALLOWED COLOR PAIRS
 // ========================
-const paletteColors = [
-  "70DC55","98F580","C4FFB5","D6FF89","02A057","FF4E8D","FFD7F4",
-  "7D69FF","3AD48D","FFA7DA","A89BFF","92FFBB","D4CDFF"
-];
-
-const forbiddenPairsRaw = [
-  ["70DC55","3AD48D"],
-  ["70DC55","FFA7DA"],
-  ["70DC55","D4CDFF"],
-  ["98F580","D4CDFF"],
-  ["98F580","FFD7F4"],
-  ["98F580","92FFBB"],
-  ["C4FFB5","D6FF89"],
-  ["C4FFB5","FFD7F4"],
-["92FFBB","D4CDFF"],["02A057","FFD7F4"],["FFA7DA","92FFBB"],["FFD7F4","02A057"],["02A057","D4CDFF"],
-  ["FFA7DA","02A057"],["02A057","A89BFF"],["FFA7DA","98F580"],["D6FF89","92FFBB"],
-  ["C4FFB5","92FFBB"],
-  ["D6FF89","C4FFB5"],
-  ["D6FF89","FFD7F4"],
-  ["02A057","FF4E8D"],
-  ["02A057","7D69FF"],
-  ["FF4E8D","02A057"],
-  ["FF4E8D","A89BFF"],
-  ["FFD7F4","98F580"],
-  ["FFD7F4","C4FFB5"],
-  ["FFD7F4","D6FF89"],
-  ["FFD7F4","92FFBB"],
-  ["7D69FF","02A057"],
-  ["3AD48D","70DC55"],
-  ["3AD48D","FFA7DA"],
-  ["3AD48D","A89BFF"],
-  ["FFA7DA","70DC55"],
-  ["FFA7DA","3AD48D"],
-  ["FFA7DA","D4CDFF"],
-  ["A89BFF","70DC55"],
-  ["A89BFF","FF4E8D"],
-  ["A89BFF","3AD48D"],
-  ["92FFBB","98F580"],
-  ["92FFBB","C4FFB5"],
-  ["92FFBB","FFD7F4"],
-  ["D4CDFF","70DC55"],
-  ["D4CDFF","98F580"],
-  ["D4CDFF","FFA7DA"],
-  ["3AD48D","D4CDFF"],
+// Each pair is [background, wave]. Order matters: reversed pairs
+// are allowed only when explicitly included in this list.
+const allowedPairs = [
+  ["E7FFBC", "D4CDFF"],
+  ["A89BFF", "D4CDFF"],
+  ["7D69FF", "D4CDFF"],
+  ["FF4E8D", "D4CDFF"],
+  ["02A057", "D4CDFF"],
+  ["D4CDFF", "E7FFBC"],
+  ["D6FF89", "D4CDFF"],
+  ["3AD48D", "E7FFBC"],
+  ["3AD48D", "92FFBB"],
+  ["02A057", "92FFBB"],
+  ["D4CDFF", "A89BFF"],
+  ["FFA7DA", "A89BFF"],
+  ["7D69FF", "A89BFF"],
+  ["FFD7F4", "A89BFF"],
+  ["D6FF89", "A89BFF"],
+  ["E7FFBC", "FFA7DA"],
+  ["A89BFF", "FFA7DA"],
+  ["7D69FF", "FFA7DA"],
+  ["FFD7F4", "FFA7DA"],
+  ["FF4E8D", "FFA7DA"],
+  ["02A057", "FFA7DA"],
+  ["D6FF89", "FFA7DA"],
+  ["92FFBB", "3AD48D"],
+  ["02A057", "3AD48D"],
+  ["D4CDFF", "7D69FF"],
+  ["A89BFF", "7D69FF"],
+  ["FFA7DA", "7D69FF"],
+  ["A89BFF", "FFD7F4"],
+  ["FFA7DA", "FFD7F4"],
+  ["3AD48D", "FFD7F4"],
+  ["7D69FF", "FFD7F4"],
+  ["02A057", "FFD7F4"],
+  ["D4CDFF", "FF4E8D"],
+  ["92FFBB", "02A057"],
+  ["E7FFBC", "02A057"],
+  ["FFD7F4", "02A057"],
+  ["D6FF89", "02A057"],
+  ["9BF4BD", "2DCB87"],
+  ["7A7EAB", "2DCB87"],
+  ["C2F773", "2DCB87"],
+  ["FFD283", "2DCB87"],
+  ["2DCB87", "9BF4BD"],
+  ["7895FF", "9BF4BD"],
+  ["AEC0FF", "9BF4BD"],
+  ["7A7EAB", "9BF4BD"],
+  ["AEACC9", "9BF4BD"],
+  ["9FD641", "9BF4BD"],
+  ["DBBBFF", "BF7BFF"],
+  ["AEC0FF", "BF7BFF"],
+  ["7A7EAB", "BF7BFF"],
+  ["AEACC9", "BF7BFF"],
+  ["FCBCB3", "BF7BFF"],
+  ["FFD283", "BF7BFF"],
+  ["9BF4BD", "DBBBFF"],
+  ["BF7BFF", "DBBBFF"],
+  ["7895FF", "DBBBFF"],
+  ["7A7EAB", "DBBBFF"],
+  ["AEACC9", "DBBBFF"],
+  ["C2F773", "DBBBFF"],
+  ["F75D5F", "DBBBFF"],
+  ["FFD283", "DBBBFF"],
+  ["2DCB87", "7895FF"],
+  ["DBBBFF", "7895FF"],
+  ["AEC0FF", "7895FF"],
+  ["7A7EAB", "7895FF"],
+  ["AEACC9", "7895FF"],
+  ["FCBCB3", "7895FF"],
+  ["FFD283", "7895FF"],
+  ["9BF4BD", "AEC0FF"],
+  ["BF7BFF", "AEC0FF"],
+  ["7895FF", "AEC0FF"],
+  ["7A7EAB", "AEC0FF"],
+  ["AEACC9", "AEC0FF"],
+  ["C2F773", "AEC0FF"],
+  ["FFD283", "AEC0FF"],
+  ["2DCB87", "7A7EAB"],
+  ["BF7BFF", "7A7EAB"],
+  ["DBBBFF", "7A7EAB"],
+  ["7895FF", "7A7EAB"],
+  ["AEC0FF", "7A7EAB"],
+  ["9FD641", "7A7EAB"],
+  ["C2F773", "7A7EAB"],
+  ["FCBCB3", "7A7EAB"],
+  ["FFD283", "7A7EAB"],
+  ["9BF4BD", "AEACC9"],
+  ["BF7BFF", "AEACC9"],
+  ["DBBBFF", "AEACC9"],
+  ["7895FF", "AEACC9"],
+  ["AEC0FF", "AEACC9"],
+  ["C2F773", "AEACC9"],
+  ["FCBCB3", "AEACC9"],
+  ["FFD283", "AEACC9"],
+  ["2DCB87", "9FD641"],
+  ["7895FF", "9FD641"],
+  ["7A7EAB", "9FD641"],
+  ["C2F773", "9FD641"],
+  ["FFD283", "9FD641"],
+  ["2DCB87", "C2F773"],
+  ["9FD641", "C2F773"],
+  ["FCBCB3", "C2F773"],
+  ["AEC0FF", "F75D5F"],
+  ["FCBCB3", "F75D5F"],
+  ["F78B2D", "F75D5F"],
+  ["FFD283", "F75D5F"],
+  ["BF7BFF", "FCBCB3"],
+  ["7895FF", "FCBCB3"],
+  ["7A7EAB", "FCBCB3"],
+  ["AEACC9", "FCBCB3"],
+  ["F75D5F", "FCBCB3"],
+  ["F78B2D", "FCBCB3"],
+  ["DBBBFF", "F78B2D"],
+  ["7A7EAB", "F78B2D"],
+  ["F75D5F", "F78B2D"],
+  ["FCBCB3", "F78B2D"],
+  ["FFD283", "F78B2D"],
+  ["BF7BFF", "FFD283"],
+  ["DBBBFF", "FFD283"],
+  ["7895FF", "FFD283"],
+  ["AEC0FF", "FFD283"],
+  ["7A7EAB", "FFD283"],
+  ["AEACC9", "FFD283"],
+  ["F75D5F", "FFD283"],
+  ["F78B2D", "FFD283"],
 ];
 
 function normHex(h) {
   return String(h).trim().replace(/^#/, "").toUpperCase();
 }
 
-function pairKey(a, b) {
-  const x = normHex(a);
-  const y = normHex(b);
-  return x < y ? `${x}|${y}` : `${y}|${x}`;
+function pairKey(bg, wave) {
+  return `${normHex(bg)}|${normHex(wave)}`;
 }
 
-const forbiddenSet = new Set(
-  forbiddenPairsRaw.map(([a, b]) => pairKey(a, b))
-);
+const allowedSet = new Set(allowedPairs.map(([bg, wave]) => pairKey(bg, wave)));
+const backgroundColors = [...new Set(allowedPairs.map(([bg]) => bg))];
+const waveColors = [...new Set(allowedPairs.map(([, wave]) => wave))];
 
-function isForbidden(a, b) {
-  return forbiddenSet.has(pairKey(a, b));
+function isAllowed(bg, wave) {
+  return allowedSet.has(pairKey(bg, wave));
 }
 
-function randPalette() {
-  return paletteColors[Math.floor(Math.random() * paletteColors.length)];
+function pickRandom(items) {
+  if (!items.length) throw new Error("No allowed color combination found.");
+  return items[Math.floor(Math.random() * items.length)];
 }
 
 function pickAllowed() {
-  for (let i = 0; i < 500; i++) {
-    const bg = randPalette();
-    const fg = randPalette();
-
-    if (bg === fg || isForbidden(bg, fg)) continue;
-
-    return [bg, fg];
-  }
-
-  return ["7D69FF", "70DC55"];
+  return [...pickRandom(allowedPairs)];
 }
 
-function pickFor(fixed) {
-  const fixedNorm = normHex(fixed);
+function pickWaveForBackground(bg) {
+  const fixed = normHex(bg);
+  return pickRandom(allowedPairs.filter(([b]) => b === fixed))[1];
+}
 
-  for (let i = 0; i < 500; i++) {
-    const c = randPalette();
-
-    if (c === fixedNorm || isForbidden(fixedNorm, c)) continue;
-
-    return c;
-  }
-
-  return "70DC55";
+function pickBackgroundForWave(wave) {
+  const fixed = normHex(wave);
+  return pickRandom(allowedPairs.filter(([, w]) => w === fixed))[0];
 }
 
 // ========================
@@ -113,8 +181,7 @@ const EXTRA_RIGHT_LENGTH = 300;
 // ========================
 // STATE
 // ========================
-let bgColor = "7D69FF";
-let fgColor = "70DC55";
+let [bgColor, fgColor] = allowedPairs[0];
 let showLogo = false;
 let showPlaque = false;
 
@@ -479,14 +546,14 @@ function createSwatches() {
   bgDiv.innerHTML = "";
   wvDiv.innerHTML = "";
 
-  paletteColors.forEach(hex => {
+  backgroundColors.forEach(hex => {
     const bgS = document.createElement("div");
     bgS.className = "swatch";
     bgS.style.backgroundColor = "#" + hex;
 
     bgS.addEventListener("click", () => {
-      if (hex === fgColor || isForbidden(hex, fgColor)) {
-        fgColor = pickFor(hex);
+      if (!isAllowed(hex, fgColor)) {
+        fgColor = pickWaveForBackground(hex);
       }
 
       bgColor = hex;
@@ -496,14 +563,16 @@ function createSwatches() {
     });
 
     bgDiv.appendChild(bgS);
+  });
 
+  waveColors.forEach(hex => {
     const wvS = document.createElement("div");
     wvS.className = "swatch";
     wvS.style.backgroundColor = "#" + hex;
 
     wvS.addEventListener("click", () => {
-      if (hex === bgColor || isForbidden(bgColor, hex)) {
-        bgColor = pickFor(hex);
+      if (!isAllowed(bgColor, hex)) {
+        bgColor = pickBackgroundForWave(hex);
       }
 
       fgColor = hex;
@@ -521,11 +590,11 @@ function createSwatches() {
 
 function updateSwatchActive() {
   document.querySelectorAll("#bgPalette .swatch").forEach((s, i) => {
-    s.classList.toggle("is-active", paletteColors[i] === normHex(bgColor));
+    s.classList.toggle("is-active", backgroundColors[i] === normHex(bgColor));
   });
 
   document.querySelectorAll("#wavePalette .swatch").forEach((s, i) => {
-    s.classList.toggle("is-active", paletteColors[i] === normHex(fgColor));
+    s.classList.toggle("is-active", waveColors[i] === normHex(fgColor));
   });
 }
 
@@ -882,7 +951,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("randomBgBtn")?.addEventListener("click", () => {
-    bgColor = pickFor(fgColor);
+    bgColor = pickBackgroundForWave(fgColor);
 
     updateSwatchActive();
     updateColorPairText();
@@ -890,7 +959,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("randomWaveBtn")?.addEventListener("click", () => {
-    fgColor = pickFor(bgColor);
+    fgColor = pickWaveForBackground(bgColor);
 
     updateSwatchActive();
     updateColorPairText();
