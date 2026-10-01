@@ -598,7 +598,29 @@ function updateSwatchActive() {
   });
 }
 
+function updateInvertButton() {
+  const button = document.getElementById("invertColorsBtn");
+  if (!button) return;
+
+  const canInvert = isAllowed(fgColor, bgColor);
+  button.disabled = !canInvert;
+  button.title = canInvert
+    ? "Swap background and wave colors"
+    : "This reversed pair is not in the approved palette";
+}
+
+function invertColors() {
+  // Preserve the approved background/wave order even for manual inversion.
+  if (!isAllowed(fgColor, bgColor)) return;
+
+  [bgColor, fgColor] = [fgColor, bgColor];
+  updateSwatchActive();
+  updateColorPairText();
+  redraw();
+}
+
 function updateColorPairText() {
+  updateInvertButton();
   const el = document.getElementById("colorPairText");
   if (!el) return;
 
@@ -966,6 +988,7 @@ window.addEventListener("DOMContentLoaded", () => {
     redraw();
   });
 
+  document.getElementById("invertColorsBtn")?.addEventListener("click", invertColors);
   document.getElementById("copyColorPairBtn")?.addEventListener("click", copyColorPair);
 
   const logoEl = document.getElementById("exportLogoToggle");
