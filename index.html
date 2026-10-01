@@ -6,6 +6,13 @@
   <title>Zvuk Wave Generator</title>
   <link rel="stylesheet" href="style.css" />
   <style>
+    #invertColorsBtn {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 8px;
+    }
+
     #invertColorsBtn:disabled {
       opacity: 0.4;
       cursor: not-allowed;
@@ -101,11 +108,12 @@
             </div>
           </div>
 
+          <button id="invertColorsBtn" type="button" class="btn btn-mini" disabled title="Swap background and wave colors">Invert</button>
+
           <div class="palette-actions-compact">
             <button id="randomColorBothBtn" class="btn btn-mini">Random</button>
             <button id="randomBgBtn" class="btn btn-mini">Bg</button>
             <button id="randomWaveBtn" class="btn btn-mini">Wave</button>
-            <button id="invertColorsBtn" type="button" class="btn btn-mini" disabled title="Swap background and wave colors">Invert</button>
           </div>
 
           <div class="color-pair-box">
